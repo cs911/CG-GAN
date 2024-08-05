@@ -1,0 +1,23 @@
+DATA:
+  name: "CIFAR10"
+  img_size: 32
+  num_classes: 10
+MODEL:
+  g_cond_mtd: "cBN"
+  d_cond_mtd: "AC"
+
+  # normalize_d_embed: True
+
+  # apply_g_sn: True
+  # apply_d_sn: True
+  # aux_cls_type: "LM"
+
+  # ETF_fc: True
+  # normalize_d_embed: True
+
+# d_adv_mtd == "SOFTMAX"
+LOSS:
+  adv_loss: "hinge"
+  cond_lambda: 1.0
+
+  # ETF: True
