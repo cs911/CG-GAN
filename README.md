@@ -52,21 +52,22 @@ data
 ```
 
 When training and evaluating, we used the command below.
-
+```
 "nkl" in "ACGAN-Mod-Big-nkl.yaml" denotes our method rCG-GAN
-"lab" in "ACGAN-Mod-Big-lab.yaml" denotes our method fCG-GAN
 
+"lab" in "ACGAN-Mod-Big-lab.yaml" denotes our method fCG-GAN
+```
 
 --------For CIFAR10/CIFAR100:
-
+```
 CUDA_VISIBLE_DEVICES=1   python3 code/main.py -t -hdf5 -l -batch_stat  -metrics is fid prdc -ref "test" -cfg ./code/configs/CIFAR100/ACGAN-Mod-Big-nkl.yaml -data cifar100 -save save 
-
+```
 --------For Baby/Papa/Grandpa-ImageNet and Tiny-ImageNet:
-
+```
 CUDA_VISIBLE_DEVICES=1  python3 code/main.py -t -hdf5 -l -batch_stat  -metrics is fid prdc -ref "valid" -cfg ./code/configs/Papa_ImageNet/ACGAN-Mod-Big-nkl.yaml -data Papa_ImageNet -save save 
-
+```
 --------For ImageNet
-
+```
 CUDA_VISIBLE_DEVICES=1  python3 code/main.py -t -hdf5 -l -sync_bn   -metrics is fid prdc -ref "valid" -cfg ./code/configs/ImageNet/ACGAN-Mod-Big-nkl.yaml -std_stat -std_max 256 -std_step 256 -mpc -data ImageNet -save save 
-
+```
 
