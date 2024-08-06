@@ -15,14 +15,6 @@ import numpy as np
 from utils.style_ops import conv2d_gradfix
 import utils.ops as ops
 
-# ========================================================
-from geomloss import SamplesLoss
-from torch.autograd import Function
-
-from torch.autograd import Variable
-import math
-# ========================================================
-
 
 class GatherLayer(torch.autograd.Function):
     """
@@ -385,106 +377,6 @@ def d_wasserstein(d_logit_real, d_logit_fake, DDP):
 
 def g_wasserstein(d_logit_fake, DDP):
     return -torch.mean(d_logit_fake)
-
-
-# ========================================================
-
-
-class LabelSmoothingCrossEntropy(nn.Module):
-
-    """
-    NLL loss with label smoothing.
-    """
-    def __init__(self, smoothing):
-        """
-        Constructor for the LabelSmoothing module.
-        :param smoothing: label smoothing factor
-        """
-        super(LabelSmoothingCrossEntropy, self).__init__()
-
-
-        # assert smoothing < 1.0
-
-        self.smoothing = smoothing
-        self.confidence = 1. - self.smoothing
-
-    def forward(self, cls_output, label, **_):
-
-        logprobs = F.log_softmax(cls_output, dim=-1)
-        nll_loss = -logprobs.gather(dim=-1, index=label.unsqueeze(1))
-        nll_loss = nll_loss.squeeze(1)
-        smooth_loss = -logprobs.mean(dim=-1)
-
-        loss = self.confidence * nll_loss + self.smoothing * smooth_loss
-        return loss.mean()
-    
-class NegCrossEntropy(nn.Module):
-    
-    """
-    Confidence Penalty:  is equivalent to
-    adding the KL divergence between the model pθ
-    and the uniform distribution.
-    """
-    def __init__(self, pro, label, current_batch, num_class):
-
-        super(NegCrossEntropy, self).__init__()
-
-        uniform_dist = torch.Tensor(current_batch, num_class).fill_(((1.- pro)/(num_class-1))).cuda()
-        
-        self.label_pro = uniform_dist.scatter_(1, label, pro).cuda()
-        
-
-    def forward(self, cls_output, **_):
-
-        logprobs = F.log_softmax(cls_output, dim=-1)      
-        loss = (torch.exp(logprobs).mul(logprobs) - torch.exp(logprobs).mul(torch.log(self.label_pro))).sum(dim=-1)
-        
-        return loss.mean()
-    
-
-class LabelCrossEntropy(nn.Module):
-
-    """
-    NLL loss with label smoothing.
-    """
-    def __init__(self, pro, num_class):
-        """
-        Constructor for the LabelSmoothing module.
-        :param smoothing: label smoothing factor
-        """
-        super(LabelCrossEntropy, self).__init__()
-
-        # uniform_dist = torch.Tensor(current_batch, self.DATA.num_classes).fill_((1./self.DATA.num_classes))
-
-        # assert smoothing < 1.0
-
-        self.smoothing = (1 - pro) / (1 - 1 / num_class)
-        self.confidence = 1. - self.smoothing
-
-    def forward(self, cls_output, label, **_):
-
-        logprobs = F.log_softmax(cls_output, dim=-1)
-        nll_loss = -logprobs.gather(dim=-1, index=label.unsqueeze(1))
-        nll_loss = nll_loss.squeeze(1)
-        smooth_loss = -logprobs.mean(dim=-1)
-
-        loss = self.confidence * nll_loss + self.smoothing * smooth_loss
-        return loss.mean()
-
-# https://github1s.com/helmy-elrais/Semi_Supervised_Learning
-# marginalized entropy
-def marginal_entropy(y):
-    y1 = y.mean(0)
-    y2 = -torch.sum(y1*torch.log(y1+ 1e-7))
-    return y2
-
-def conditional_entropy(y, batch_size):
-    # y-->softmax output
-    y1 = -y*torch.log(y + 1e-7)
-    y2 = 1.0/batch_size*y1.sum()
-    return y2
-
-# =======================================================================
 
 
 def crammer_singer_loss(adv_output, label, DDP, **_):
